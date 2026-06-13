@@ -1,0 +1,75 @@
+name: Build ShareX Lite
+
+on:
+  push:
+    branches:
+      - "**"
+    tags:
+      - "lite-v[0-9]+.[0-9]+.[0-9]+"
+    paths:
+      - "ShareX.Lite/**"
+      - ".github/workflows/sharex-lite.yml"
+  pull_request:
+    paths:
+      - "ShareX.Lite/**"
+      - ".github/workflows/sharex-lite.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-latest
+            rust_target: x86_64-pc-windows-msvc
+            args: --target x86_64-pc-windows-msvc
+            bundles: ""
+          - name: macOS Apple Silicon
+            os: macos-14
+            rust_target: aarch64-apple-darwin
+            args: --target aarch64-apple-darwin
+            bundles: --bundles app
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ShareX.Lite/package-lock.json
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust_target }}
+
+      - name: Install frontend dependencies
+        working-directory: ShareX.Lite
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ShareX.Lite
+        run: npm run build
+
+      - name: Build Tauri app
+        working-directory: ShareX.Lite
+        run: npm run tauri:build -- ${{ matrix.args }} ${{ matrix.bundles }}
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: sharex-lite-${{ matrix.name }}
+          path: |
+            ShareX.Lite/src-tauri/target/**/release/bundle/**/*.dmg
+            ShareX.Lite/src-tauri/target/**/release/bundle/**/*.app
+            ShareX.Lite/src-tauri/target/**/release/bundle/**/*.msi
+            ShareX.Lite/src-tauri/target/**/release/bundle/**/*.exe

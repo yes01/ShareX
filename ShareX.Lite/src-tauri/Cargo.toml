@@ -1,0 +1,38 @@
+[package]
+name = "sharex-lite"
+version = "0.1.0"
+description = "Lightweight cross-platform capture and upload utility inspired by ShareX."
+authors = ["ShareX Lite Contributors"]
+edition = "2024"
+rust-version = "1.88"
+
+[lib]
+name = "sharex_lite_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "sharex-lite"
+path = "src/main.rs"
+
+[build-dependencies]
+tauri-build = { version = "2.5.2", features = [] }
+
+[dependencies]
+anyhow = "1.0.100"
+chrono = { version = "0.4.42", features = ["serde"] }
+image = { version = "0.25.9", default-features = false, features = ["png", "jpeg"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+tauri = { version = "2.9.5", features = ["tray-icon", "image-png"] }
+tauri-plugin-clipboard-manager = "2.3.2"
+tauri-plugin-global-shortcut = "2.3.2"
+tauri-plugin-notification = "2.3.3"
+tauri-plugin-opener = "2.5.4"
+thiserror = "2.0.17"
+tokio = { version = "1.48.0", features = ["fs", "io-util", "sync"] }
+ureq = { version = "3.1.4", default-features = false, features = ["rustls"] }
+uuid = { version = "1.19.0", features = ["v4", "serde"] }
+
+[features]
+default = []
+custom-protocol = ["tauri/custom-protocol"]

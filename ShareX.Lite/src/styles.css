@@ -1,0 +1,650 @@
+:root {
+  color-scheme: light;
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  --bg: oklch(0.965 0.006 255);
+  --surface: oklch(0.995 0.002 255);
+  --panel: oklch(0.985 0.004 255);
+  --line: oklch(0.88 0.012 255);
+  --line-strong: oklch(0.78 0.018 255);
+  --ink: oklch(0.19 0.024 255);
+  --muted: oklch(0.42 0.026 255);
+  --quiet: oklch(0.58 0.02 255);
+  --accent: oklch(0.55 0.18 245);
+  --accent-ink: oklch(0.99 0.003 255);
+  --accent-soft: oklch(0.93 0.035 245);
+  --danger: oklch(0.54 0.18 25);
+  --success: oklch(0.58 0.14 150);
+  --warning: oklch(0.67 0.15 75);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 760px;
+  min-height: 100dvh;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  border: 0;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: 100dvh;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 18px;
+  border-right: 1px solid var(--line);
+  background: oklch(0.94 0.01 255);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 42px;
+}
+
+.brandMark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--ink);
+  color: white;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.brand strong,
+.brand span {
+  display: block;
+}
+
+.brand span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.nav {
+  display: grid;
+  gap: 6px;
+}
+
+.navButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 38px;
+  padding: 0 11px;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.navButton svg {
+  width: 19px;
+  height: 19px;
+}
+
+.navButton:hover,
+.navButton:focus-visible {
+  background: oklch(0.91 0.012 255);
+  color: var(--ink);
+  outline: none;
+}
+
+.navButton.active {
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.railStatus {
+  margin-top: auto;
+  display: grid;
+  gap: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.railStatus span {
+  color: var(--quiet);
+  font-size: 12px;
+}
+
+.railStatus strong {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.railStatus p,
+.errorText {
+  margin: 0;
+  color: var(--danger);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.workspace {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 18px;
+  padding: 22px;
+  overflow: auto;
+}
+
+.topbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+h1,
+h2,
+p {
+  margin: 0;
+}
+
+h1 {
+  font-size: 28px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.topbar p {
+  margin-top: 6px;
+  max-width: 68ch;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.topActions,
+.buttonRow,
+.rowActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton,
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.primaryButton {
+  padding: 0 14px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+
+.secondaryButton {
+  padding: 0 12px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.ghostButton {
+  padding: 0 10px;
+  background: transparent;
+  color: var(--muted);
+}
+
+.iconButton {
+  width: 34px;
+  min-width: 34px;
+  background: var(--surface);
+  color: var(--muted);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.primaryButton:hover,
+.secondaryButton:hover,
+.ghostButton:hover,
+.iconButton:hover {
+  filter: brightness(0.98);
+}
+
+.primaryButton:active,
+.secondaryButton:active,
+.ghostButton:active,
+.iconButton:active,
+.actionTile:active {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.gridLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  gap: 16px;
+}
+
+.settingsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(310px, 1fr));
+  gap: 16px;
+}
+
+.panel {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.panelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 54px;
+  gap: 12px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.panelHeader h2 {
+  font-size: 15px;
+}
+
+.panelHeader > div {
+  color: var(--quiet);
+  font-size: 13px;
+}
+
+.commandPanel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  padding: 14px;
+}
+
+.actionTile {
+  display: grid;
+  min-height: 158px;
+  align-content: start;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--ink);
+  text-align: left;
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.actionTile:hover {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px oklch(0.72 0.09 245);
+}
+
+.tileIcon,
+.targetIcon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+.actionTile strong {
+  font-size: 15px;
+}
+
+.actionTile span:last-child {
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.latestPanel {
+  min-height: 230px;
+}
+
+.latestMeta {
+  display: grid;
+  gap: 18px;
+  padding: 18px;
+}
+
+.latestMeta div:first-child {
+  display: grid;
+  gap: 6px;
+}
+
+.latestMeta span,
+.historyItem span,
+.targetHead span {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.emptyState {
+  display: grid;
+  min-height: 210px;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  padding: 28px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.emptyState strong {
+  color: var(--ink);
+}
+
+.historyList {
+  display: grid;
+}
+
+.historyItem {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.historyItem:last-child {
+  border-bottom: 0;
+}
+
+.historyMain {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.historyMain strong,
+.historyMain span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--quiet);
+}
+
+.statusDot.saved {
+  background: var(--accent);
+}
+
+.statusDot.uploaded {
+  background: var(--success);
+}
+
+.statusDot.failed {
+  background: var(--danger);
+}
+
+.statusDot.uploading {
+  background: var(--warning);
+}
+
+.linkButton {
+  justify-self: start;
+  max-width: 100%;
+  padding: 0;
+  overflow: hidden;
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.targetGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  padding: 14px;
+}
+
+.targetItem {
+  display: grid;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.targetHead {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.targetHead strong,
+.targetHead span {
+  display: block;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+  padding: 14px 16px;
+}
+
+.targetItem .field {
+  padding: 0;
+}
+
+.field span,
+.toggleRow span:first-child {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+input,
+select {
+  min-height: 36px;
+  width: 100%;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  padding: 0 10px;
+}
+
+input::placeholder {
+  color: oklch(0.52 0.018 255);
+}
+
+input:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid oklch(0.65 0.15 245);
+  outline-offset: 2px;
+}
+
+.toggleRow {
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--line);
+}
+
+.toggleRow:last-child {
+  border-bottom: 0;
+}
+
+.switch {
+  position: relative;
+  display: inline-flex;
+  width: 42px;
+  height: 24px;
+  align-items: center;
+}
+
+.switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.switch > span {
+  width: 42px;
+  height: 24px;
+  border-radius: 999px;
+  background: oklch(0.82 0.01 255);
+  transition:
+    background 160ms ease,
+    border-color 160ms ease;
+}
+
+.switch > span::after {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: white;
+  box-shadow: 0 1px 2px oklch(0 0 0 / 0.2);
+  content: "";
+  transition: transform 160ms ease;
+}
+
+.switch input:checked + span {
+  background: var(--accent);
+}
+
+.switch input:checked + span::after {
+  transform: translateX(18px);
+}
+
+.spin {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 980px) {
+  body {
+    min-width: 0;
+  }
+
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .rail {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .navButton {
+    width: auto;
+    min-width: max-content;
+  }
+
+  .railStatus {
+    grid-column: 1 / -1;
+    margin-top: 0;
+  }
+
+  .topbar,
+  .gridLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar {
+    display: grid;
+  }
+
+  .topActions {
+    justify-content: start;
+  }
+
+  .historyItem {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+
+  .rowActions {
+    grid-column: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
