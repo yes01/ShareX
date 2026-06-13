@@ -27,6 +27,13 @@
   "bundle": {
     "active": true,
     "targets": ["dmg", "msi", "nsis"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.png",
+      "icons/icon.ico"
+    ],
     "category": "Utility",
     "shortDescription": "Lightweight cross-platform capture and upload utility.",
     "longDescription": "A compact Rust and Tauri rewrite of the core ShareX capture, copy, save, upload, history, tray, and shortcut workflows."
