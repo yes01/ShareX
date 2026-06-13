@@ -11,6 +11,7 @@ on:
       - "**/*.gitignore"
       - "**/*.gitattributes"
       - "ShareX.Lite/**"
+      - ".github/workflows/build.yml"
       - ".github/workflows/sharex-lite.yml"
 
 permissions:
