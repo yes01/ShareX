@@ -16,7 +16,7 @@ on:
       - ".github/workflows/sharex-lite.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -31,11 +31,13 @@ jobs:
             rust_target: x86_64-pc-windows-msvc
             args: --target x86_64-pc-windows-msvc
             bundles: --bundles msi,nsis
+            config: ""
           - name: macOS Apple Silicon
             os: macos-14
             rust_target: aarch64-apple-darwin
             args: --target aarch64-apple-darwin
             bundles: --bundles app
+            config: --config tauri.macos.ci.conf.json
 
     steps:
       - name: Checkout
@@ -61,9 +63,39 @@ jobs:
         working-directory: ShareX.Lite
         run: npm run build
 
+      - name: Configure macOS ad-hoc signing
+        if: runner.os == 'macOS'
+        working-directory: ShareX.Lite
+        run: |
+          cat > tauri.macos.ci.conf.json <<'JSON'
+          {
+            "bundle": {
+              "macOS": {
+                "signingIdentity": "-",
+                "hardenedRuntime": false
+              }
+            }
+          }
+          JSON
+
       - name: Build Tauri app
         working-directory: ShareX.Lite
-        run: npm run tauri:build -- ${{ matrix.args }} ${{ matrix.bundles }}
+        run: npm run tauri:build -- ${{ matrix.args }} ${{ matrix.bundles }} ${{ matrix.config }}
+
+      - name: Package macOS DMG
+        if: runner.os == 'macOS'
+        working-directory: ShareX.Lite
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          APP_PATH=$(find src-tauri/target -path "*/release/bundle/macos/ShareX Lite.app" -print -quit)
+          DMG_DIR="src-tauri/target/${{ matrix.rust_target }}/release/bundle/dmg"
+          DMG_PATH="$DMG_DIR/ShareX-Lite-${VERSION}-macOS-arm64.dmg"
+          STAGING_DIR=$(mktemp -d)
+
+          mkdir -p "$DMG_DIR"
+          ditto "$APP_PATH" "$STAGING_DIR/ShareX Lite.app"
+          ln -s /Applications "$STAGING_DIR/Applications"
+          hdiutil create -volname "ShareX Lite" -srcfolder "$STAGING_DIR" -ov -format UDZO "$DMG_PATH"
 
       - name: Upload bundle
         uses: actions/upload-artifact@v7
@@ -71,6 +103,29 @@ jobs:
           name: sharex-lite-${{ matrix.name }}
           path: |
             ShareX.Lite/src-tauri/target/**/release/bundle/**/*.dmg
-            ShareX.Lite/src-tauri/target/**/release/bundle/**/*.app
             ShareX.Lite/src-tauri/target/**/release/bundle/**/*.msi
             ShareX.Lite/src-tauri/target/**/release/bundle/**/*.exe
+
+  release:
+    name: Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download bundles
+        uses: actions/download-artifact@v8
+        with:
+          path: release-assets
+
+      - name: Show release files
+        run: find release-assets -type f \( -name '*.dmg' -o -name '*.msi' -o -name '*.exe' \) -print | sort
+
+      - name: Publish release assets
+        uses: softprops/action-gh-release@v3
+        with:
+          draft: false
+          prerelease: true
+          files: |
+            release-assets/**/*.dmg
+            release-assets/**/*.msi
+            release-assets/**/*.exe
