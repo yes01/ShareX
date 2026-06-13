@@ -7,11 +7,11 @@ use std::process::Command;
 use uuid::Uuid;
 
 pub async fn capture_all_monitors(settings: &AppSettings) -> AppResult<HistoryItem> {
-    capture_to_file(None, "All monitors", settings).await
+    capture_to_file(None, "所有显示器", settings).await
 }
 
 pub async fn capture_monitor(index: usize, settings: &AppSettings) -> AppResult<HistoryItem> {
-    capture_to_file(Some(index), &format!("Monitor {}", index + 1), settings).await
+    capture_to_file(Some(index), &format!("显示器 {}", index + 1), settings).await
 }
 
 pub async fn capture_active_monitor(settings: &AppSettings) -> AppResult<HistoryItem> {
@@ -88,7 +88,7 @@ fn capture_platform(monitor_index: Option<usize>, path: &Path) -> AppResult<()> 
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 $screens = [System.Windows.Forms.Screen]::AllScreens
-if ({index} -ge $screens.Length) {{ throw 'Monitor index was not found.' }}
+if ({index} -ge $screens.Length) {{ throw '未找到指定显示器索引。' }}
 $bounds = if ($screens.Length -eq 1 -or {index} -ge 0) {{ $screens[{index}].Bounds }} else {{ [System.Windows.Forms.SystemInformation]::VirtualScreen }}
 $bitmap = New-Object System.Drawing.Bitmap $bounds.Width, $bounds.Height
 $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
@@ -112,6 +112,6 @@ $bitmap.Dispose()
 #[cfg(not(any(target_os = "macos", target_os = "windows")))]
 fn capture_platform(_monitor_index: Option<usize>, _path: &Path) -> AppResult<()> {
     Err(AppError::Message(
-        "Screen capture is only enabled for macOS and Windows builds.".to_string(),
+        "屏幕截图目前仅支持 macOS 和 Windows 构建。".to_string(),
     ))
 }

@@ -13,6 +13,12 @@ export interface AfterCaptureSettings {
   openAfterCapture: boolean;
 }
 
+export interface RecordingSettings {
+  filenamePattern: string;
+  durationSeconds: number;
+  fps: number;
+}
+
 export interface UploadTargetSettings {
   id: string;
   name: string;
@@ -35,6 +41,7 @@ export interface AppSettings {
   filenamePattern: string;
   imageFormat: ImageFormat;
   afterCapture: AfterCaptureSettings;
+  recording: RecordingSettings;
   uploadTargets: UploadTargetSettings[];
   shortcuts: ShortcutSettings;
 }
@@ -67,10 +74,36 @@ export interface UploadResult {
   statusCode?: number | null;
 }
 
+export interface RecordingRequest {
+  mode: "Screen" | "Gif";
+  durationSeconds: number;
+  fps: number;
+}
+
+export interface ProcessImageRequest {
+  sourcePath: string;
+  crop?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+  resizeWidth?: number | null;
+  grayscale: boolean;
+  border?: {
+    size: number;
+    color: string;
+  } | null;
+  watermark?: {
+    text: string;
+    position: "TopLeft" | "TopRight" | "BottomLeft" | "BottomRight";
+  } | null;
+}
+
 const isTauriRuntime = "__TAURI_INTERNALS__" in window;
 const mockSettings: AppSettings = {
   saveDirectory: "~/Pictures/ShareX Lite",
-  filenamePattern: "Screenshot-%Y-%m-%d-%H%M%S",
+  filenamePattern: "截图-%Y-%m-%d-%H%M%S",
   imageFormat: "Png",
   afterCapture: {
     copyImage: true,
@@ -78,17 +111,22 @@ const mockSettings: AppSettings = {
     upload: false,
     openAfterCapture: false
   },
+  recording: {
+    filenamePattern: "录屏-%Y-%m-%d-%H%M%S",
+    durationSeconds: 10,
+    fps: 12
+  },
   uploadTargets: [
     {
       id: "local-folder",
-      name: "Local folder",
+      name: "本地文件夹",
       kind: "LocalFolder",
       enabled: true,
       directory: ""
     },
     {
       id: "custom-http",
-      name: "Custom HTTP",
+      name: "自定义 HTTP",
       kind: "CustomHttp",
       enabled: false,
       endpoint: "https://example.com/upload",
@@ -108,8 +146,8 @@ let mockHistory: HistoryItem[] = [
     id: "preview-1",
     createdAt: new Date().toISOString(),
     kind: "screenshot",
-    title: "All monitors",
-    path: "~/Pictures/ShareX Lite/Screenshot-preview.png",
+    title: "所有显示器",
+    path: "~/Pictures/ShareX Lite/截图-preview.png",
     url: null,
     status: "saved",
     width: 3024,
@@ -127,6 +165,8 @@ const tauriApi = {
   captureAll: () => invoke<HistoryItem>("capture_all"),
   captureMonitor: (index: number) => invoke<HistoryItem>("capture_monitor_command", { index }),
   captureActiveMonitor: () => invoke<HistoryItem>("capture_active_monitor_command"),
+  recordScreen: (request: RecordingRequest) => invoke<HistoryItem>("record_screen_command", { request }),
+  processImage: (request: ProcessImageRequest) => invoke<HistoryItem>("process_image_command", { request }),
   uploadHistoryItem: (id: string, request: UploadRequest) =>
     invoke<UploadResult>("upload_history_item", { id, request }),
   revealFile: (path: string) => invoke<void>("reveal_file", { path }),
@@ -157,16 +197,18 @@ const browserPreviewApi = {
   clearHistory: async () => {
     mockHistory = [];
   },
-  captureAll: async () => createMockCapture("All monitors"),
-  captureMonitor: async (index: number) => createMockCapture(`Monitor ${index + 1}`),
-  captureActiveMonitor: async () => createMockCapture("Monitor 1"),
+  captureAll: async () => createMockCapture("所有显示器"),
+  captureMonitor: async (index: number) => createMockCapture(`显示器 ${index + 1}`),
+  captureActiveMonitor: async () => createMockCapture("显示器 1"),
+  recordScreen: async (request: RecordingRequest) => createMockRecording(request.mode),
+  processImage: async (request: ProcessImageRequest) => createMockProcessedImage(request.sourcePath),
   uploadHistoryItem: async (id: string) => {
     mockHistory = mockHistory.map((item) =>
       item.id === id ? { ...item, status: "uploaded", url: "https://example.com/screenshot-preview.png" } : item
     );
     return {
       url: "https://example.com/screenshot-preview.png",
-      destination: "Browser preview",
+      destination: "浏览器预览",
       statusCode: 200
     };
   },
@@ -184,12 +226,48 @@ function createMockCapture(title: string) {
     createdAt: new Date().toISOString(),
     kind: "screenshot",
     title,
-    path: `~/Pictures/ShareX Lite/Screenshot-${Date.now()}.png`,
+    path: `~/Pictures/ShareX Lite/截图-${Date.now()}.png`,
     url: null,
     status: "saved",
     width: 3024,
     height: 1964,
     sizeBytes: 860000,
+    error: null
+  };
+  mockHistory = [item, ...mockHistory];
+  return item;
+}
+
+function createMockRecording(mode: RecordingRequest["mode"]) {
+  const item: HistoryItem = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    kind: mode === "Gif" ? "gif" : "video",
+    title: mode === "Gif" ? "GIF 录制" : "录屏",
+    path: `~/Pictures/ShareX Lite/录屏-${Date.now()}.${mode === "Gif" ? "gif" : "mp4"}`,
+    url: null,
+    status: "saved",
+    width: 0,
+    height: 0,
+    sizeBytes: mode === "Gif" ? 2800000 : 9600000,
+    error: null
+  };
+  mockHistory = [item, ...mockHistory];
+  return item;
+}
+
+function createMockProcessedImage(sourcePath: string) {
+  const item: HistoryItem = {
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    kind: "image",
+    title: "截图后处理",
+    path: sourcePath.replace(/(\.[^.]+)?$/, "-processed.png"),
+    url: null,
+    status: "saved",
+    width: 1600,
+    height: 1000,
+    sizeBytes: 720000,
     error: null
   };
   mockHistory = [item, ...mockHistory];

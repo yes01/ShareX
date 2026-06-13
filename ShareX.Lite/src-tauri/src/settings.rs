@@ -11,6 +11,8 @@ pub struct AppSettings {
     pub filename_pattern: String,
     pub image_format: ImageFormat,
     pub after_capture: AfterCaptureSettings,
+    #[serde(default)]
+    pub recording: RecordingSettings,
     pub upload_targets: Vec<UploadTargetSettings>,
     pub shortcuts: ShortcutSettings,
 }
@@ -29,6 +31,24 @@ pub struct AfterCaptureSettings {
     pub save_file: bool,
     pub upload: bool,
     pub open_after_capture: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RecordingSettings {
+    pub filename_pattern: String,
+    pub duration_seconds: u32,
+    pub fps: u32,
+}
+
+impl Default for RecordingSettings {
+    fn default() -> Self {
+        Self {
+            filename_pattern: "录屏-%Y-%m-%d-%H%M%S".to_string(),
+            duration_seconds: 10,
+            fps: 12,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -91,7 +111,10 @@ impl SettingsStore {
         }
 
         let content = tokio::fs::read_to_string(&self.path).await?;
-        let settings: AppSettings = serde_json::from_str(&content)?;
+        let mut settings: AppSettings = serde_json::from_str(&content)?;
+        if migrate_localized_defaults(&mut settings) {
+            self.save_inner(&settings).await?;
+        }
         *cache = Some(settings.clone());
         Ok(settings)
     }
@@ -112,6 +135,32 @@ impl SettingsStore {
     }
 }
 
+fn migrate_localized_defaults(settings: &mut AppSettings) -> bool {
+    let mut changed = false;
+
+    if settings.filename_pattern == "Screenshot-%Y-%m-%d-%H%M%S" {
+        settings.filename_pattern = "截图-%Y-%m-%d-%H%M%S".to_string();
+        changed = true;
+    }
+
+    if settings.recording.filename_pattern == "Recording-%Y-%m-%d-%H%M%S" {
+        settings.recording.filename_pattern = "录屏-%Y-%m-%d-%H%M%S".to_string();
+        changed = true;
+    }
+
+    for target in &mut settings.upload_targets {
+        if target.id == "local-folder" && target.name == "Local folder" {
+            target.name = "本地文件夹".to_string();
+            changed = true;
+        } else if target.id == "custom-http" && target.name == "Custom HTTP" {
+            target.name = "自定义 HTTP".to_string();
+            changed = true;
+        }
+    }
+
+    changed
+}
+
 impl Default for AppSettings {
     fn default() -> Self {
         let pictures = default_pictures_dir();
@@ -119,7 +168,7 @@ impl Default for AppSettings {
 
         Self {
             save_directory: save_directory.to_string_lossy().to_string(),
-            filename_pattern: "Screenshot-%Y-%m-%d-%H%M%S".to_string(),
+            filename_pattern: "截图-%Y-%m-%d-%H%M%S".to_string(),
             image_format: ImageFormat::Png,
             after_capture: AfterCaptureSettings {
                 copy_image: true,
@@ -127,10 +176,11 @@ impl Default for AppSettings {
                 upload: false,
                 open_after_capture: false,
             },
+            recording: RecordingSettings::default(),
             upload_targets: vec![
                 UploadTargetSettings {
                     id: "local-folder".to_string(),
-                    name: "Local folder".to_string(),
+                    name: "本地文件夹".to_string(),
                     kind: UploadTargetKind::LocalFolder,
                     enabled: true,
                     endpoint: None,
@@ -139,7 +189,7 @@ impl Default for AppSettings {
                 },
                 UploadTargetSettings {
                     id: "custom-http".to_string(),
-                    name: "Custom HTTP".to_string(),
+                    name: "自定义 HTTP".to_string(),
                     kind: UploadTargetKind::CustomHttp,
                     enabled: false,
                     endpoint: Some("https://example.com/upload".to_string()),

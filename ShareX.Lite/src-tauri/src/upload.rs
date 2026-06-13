@@ -27,26 +27,29 @@ pub async fn upload_file(path: &str, request: UploadRequest) -> AppResult<Upload
         UploadTargetKind::LocalFolder => copy_to_local_folder(path, request.directory).await,
         UploadTargetKind::CustomHttp => upload_custom_http(path, request).await,
         UploadTargetKind::S3Compatible => Err(AppError::Message(
-            "S3 compatible uploads are reserved for the next implementation pass.".to_string(),
+            "S3 兼容上传已预留，将在下一轮实现。".to_string(),
         )),
         UploadTargetKind::Ftp => Err(AppError::Message(
-            "FTP uploads are reserved for the next implementation pass.".to_string(),
+            "FTP 上传已预留，将在下一轮实现。".to_string(),
         )),
         UploadTargetKind::Sftp => Err(AppError::Message(
-            "SFTP uploads are reserved for the next implementation pass.".to_string(),
+            "SFTP 上传已预留，将在下一轮实现。".to_string(),
         )),
     }
 }
 
 async fn copy_to_local_folder(path: &str, directory: Option<String>) -> AppResult<UploadResult> {
     let source = Path::new(path);
-    let directory = directory
-        .map(PathBuf::from)
-        .unwrap_or_else(|| source.parent().unwrap_or_else(|| Path::new(".")).to_path_buf());
+    let directory = directory.map(PathBuf::from).unwrap_or_else(|| {
+        source
+            .parent()
+            .unwrap_or_else(|| Path::new("."))
+            .to_path_buf()
+    });
     tokio::fs::create_dir_all(&directory).await?;
     let name = source
         .file_name()
-        .ok_or_else(|| AppError::Message("Source file does not have a file name.".to_string()))?;
+        .ok_or_else(|| AppError::Message("源文件没有文件名。".to_string()))?;
     let destination = unique_destination(&directory.join(name)).await;
     tokio::fs::copy(source, &destination).await?;
     Ok(UploadResult {
@@ -59,7 +62,7 @@ async fn copy_to_local_folder(path: &str, directory: Option<String>) -> AppResul
 async fn upload_custom_http(path: &str, request: UploadRequest) -> AppResult<UploadResult> {
     let endpoint = request
         .endpoint
-        .ok_or_else(|| AppError::Message("Custom HTTP endpoint is required.".to_string()))?;
+        .ok_or_else(|| AppError::Message("必须填写自定义 HTTP 端点地址。".to_string()))?;
     let method = request.method.unwrap_or_else(|| "POST".to_string());
     let source = path.to_string();
     let endpoint_for_thread = endpoint.clone();
@@ -73,7 +76,7 @@ async fn upload_custom_http(path: &str, request: UploadRequest) -> AppResult<Upl
             "POST" => ureq::post(&endpoint_for_thread),
             other => {
                 return Err(AppError::Message(format!(
-                    "Unsupported custom HTTP method: {other}"
+                    "不支持的自定义 HTTP 请求方法：{other}"
                 )));
             }
         };
@@ -92,7 +95,7 @@ async fn upload_custom_http(path: &str, request: UploadRequest) -> AppResult<Upl
     let (status, body) = response;
     if !(200..300).contains(&status) {
         return Err(AppError::Message(format!(
-            "Upload failed with HTTP {}: {}",
+            "上传失败，HTTP 状态码 {}：{}",
             status, body
         )));
     }

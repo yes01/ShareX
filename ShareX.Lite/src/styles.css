@@ -268,6 +268,10 @@ button:disabled {
   gap: 16px;
 }
 
+.processGrid {
+  grid-template-columns: minmax(320px, 0.78fr) minmax(380px, 1fr);
+}
+
 .panel {
   min-width: 0;
   border: 1px solid var(--line);
@@ -449,6 +453,32 @@ button:disabled {
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 14px;
   padding: 14px;
+}
+
+.compactGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.processPanel {
+  padding-bottom: 14px;
+}
+
+.panelFooter {
+  display: flex;
+  justify-content: flex-end;
+  padding: 2px 16px 0;
+}
+
+.noteBlock {
+  margin: 0 16px 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .targetItem {

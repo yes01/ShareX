@@ -1,10 +1,14 @@
 mod capture;
 mod history;
+mod processing;
+mod recording;
 mod settings;
 mod upload;
 
 use capture::{capture_active_monitor, capture_all_monitors, capture_monitor};
 use history::{HistoryItem, HistoryStore};
+use processing::{ProcessImageRequest, process_image};
+use recording::{RecordingRequest, record_screen};
 use settings::{AppSettings, SettingsStore};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
@@ -107,6 +111,34 @@ async fn capture_active_monitor_command(
 }
 
 #[tauri::command]
+async fn record_screen_command(
+    app: AppHandle,
+    request: RecordingRequest,
+    settings: tauri::State<'_, SettingsStore>,
+    history: tauri::State<'_, HistoryStore>,
+) -> AppResult<HistoryItem> {
+    let settings = settings.load().await?;
+    let item = record_screen(request, &settings).await?;
+    history.append(&item).await?;
+    emit_history(&app, &item);
+    Ok(item)
+}
+
+#[tauri::command]
+async fn process_image_command(
+    app: AppHandle,
+    request: ProcessImageRequest,
+    settings: tauri::State<'_, SettingsStore>,
+    history: tauri::State<'_, HistoryStore>,
+) -> AppResult<HistoryItem> {
+    let settings = settings.load().await?;
+    let item = process_image(request, &settings).await?;
+    history.append(&item).await?;
+    emit_history(&app, &item);
+    Ok(item)
+}
+
+#[tauri::command]
 async fn upload_history_item(
     app: AppHandle,
     id: String,
@@ -117,7 +149,7 @@ async fn upload_history_item(
     let item = items
         .iter_mut()
         .find(|item| item.id == id)
-        .ok_or_else(|| AppError::Message("History item was not found.".to_string()))?;
+        .ok_or_else(|| AppError::Message("未找到历史记录项。".to_string()))?;
     item.status = "uploading".to_string();
     history.save_all(&items).await?;
 
@@ -125,7 +157,7 @@ async fn upload_history_item(
         .iter()
         .find(|item| item.id == id)
         .map(|item| item.path.clone())
-        .ok_or_else(|| AppError::Message("History item was not found.".to_string()))?;
+        .ok_or_else(|| AppError::Message("未找到历史记录项。".to_string()))?;
 
     let result = upload_file(&target, request).await;
     let mut items = history.load().await?;
@@ -166,10 +198,10 @@ fn emit_history(app: &AppHandle, item: &HistoryItem) {
 }
 
 fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
-    let show = MenuItem::with_id(app, "show", "Show ShareX Lite", true, None::<&str>)?;
-    let capture = MenuItem::with_id(app, "capture", "Capture all monitors", true, None::<&str>)?;
-    let folder = MenuItem::with_id(app, "folder", "Open screenshots folder", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "显示 ShareX Lite", true, None::<&str>)?;
+    let capture = MenuItem::with_id(app, "capture", "截取所有显示器", true, None::<&str>)?;
+    let folder = MenuItem::with_id(app, "folder", "打开截图文件夹", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?;
     let menu = Menu::with_items(app, &[&show, &capture, &folder, &quit])?;
 
     TrayIconBuilder::new()
@@ -188,7 +220,10 @@ fn setup_tray(app: &mut tauri::App) -> tauri::Result<()> {
                 tauri::async_runtime::spawn(async move {
                     if let Some(settings) = handle.try_state::<SettingsStore>() {
                         if let Ok(settings) = settings.load().await {
-                            let _ = tauri_plugin_opener::open_path(settings.save_directory, None::<String>);
+                            let _ = tauri_plugin_opener::open_path(
+                                settings.save_directory,
+                                None::<String>,
+                            );
                         }
                     }
                 });
@@ -239,10 +274,12 @@ pub fn run() {
             capture_all,
             capture_monitor_command,
             capture_active_monitor_command,
+            record_screen_command,
+            process_image_command,
             upload_history_item,
             reveal_file,
             open_screenshots_folder
         ])
         .run(tauri::generate_context!())
-        .expect("error while running ShareX Lite");
+        .expect("运行 ShareX Lite 时出错");
 }

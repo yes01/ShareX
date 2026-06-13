@@ -35,7 +35,7 @@
       "icons/icon.ico"
     ],
     "category": "Utility",
-    "shortDescription": "Lightweight cross-platform capture and upload utility.",
-    "longDescription": "A compact Rust and Tauri rewrite of the core ShareX capture, copy, save, upload, history, tray, and shortcut workflows."
+    "shortDescription": "轻量级跨平台截图与上传工具。",
+    "longDescription": "基于 Rust 和 Tauri 的精简版 ShareX，覆盖截图、复制、保存、上传、历史记录、托盘和快捷键等核心流程。"
   }
 }
