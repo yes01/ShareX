@@ -10,6 +10,8 @@ on:
       - "**/*.md"
       - "**/*.gitignore"
       - "**/*.gitattributes"
+      - "ShareX.Lite/**"
+      - ".github/workflows/sharex-lite.yml"
 
 permissions:
   contents: read
