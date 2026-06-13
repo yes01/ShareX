@@ -1,18 +1,7 @@
 name: Build ShareX
 
 on:
-  push:
-    branches:
-      - "**"
-    tags:
-      - "v[0-9]+.[0-9]+.[0-9]+"
-    paths-ignore:
-      - "**/*.md"
-      - "**/*.gitignore"
-      - "**/*.gitattributes"
-      - "ShareX.Lite/**"
-      - ".github/workflows/build.yml"
-      - ".github/workflows/sharex-lite.yml"
+  workflow_dispatch:
 
 permissions:
   contents: read
